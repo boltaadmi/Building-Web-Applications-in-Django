@@ -1,14 +1,42 @@
-from django.db import models
+# Assuming you have already defined the models Question and Choice in your Django app
 
-class Question(models.Model):
-    question_text = models.CharField(max_length=200)
-    # publish date is optional you can skip that field
-    pub_date = models.DateTimeField('date published')
-    def __str__(self):
-        return self.question_text
+from django.contrib import admin
+from django.urls import path
 
-class Choice(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
-    def __str__(self):
-        return self.choice_text
+# Your models
+from your_app_name.models import Question, Choice
+
+# Define your admin classes
+class ChoiceInline(admin.TabularInline):
+    model = Choice
+    extra = 3
+
+class QuestionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        (None, {'fields': ['question_text']}),
+        ('Date Information', {'fields': ['pub_date'], 'classes': ['collapse']}),
+    ]
+    inlines = [ChoiceInline]
+
+# Register your models with the admin site
+admin.site.register(Question, QuestionAdmin)
+
+# URL patterns
+urlpatterns = [
+    path('admin/', admin.site.urls),
+]
+
+# Now, in your Django shell:
+from your_app_name.models import Question, Choice
+
+# Insert a new question with the exact text
+question_text = "Insert your question text here"
+question = Question.objects.create(question_text=question_text)
+
+# Create choices and associate them with the question
+Choice.objects.create(question=question, choice_text="Choice 1")
+Choice.objects.create(question=question, choice_text="Choice 2")
+Choice.objects.create(question=question, choice_text="42")
+
+# Verify the choices associated with the question
+question.choice_set.all()
